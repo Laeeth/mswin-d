@@ -1,0 +1,8 @@
+{
+    "name": "mswin.d",
+    "description": "Utilities for the Microsoft Windows platform. Based on the Juno and Bindings projects from DSource.",
+    "license": "Boost",
+    "authors": [ "John Chapman", "Contributors at http://dsource.org/projects/bindings", "Sean Cavanaugh", "JesseKPhillips", "Octavian Cacina"],
+    "versions": ["WindowsXP", "Unicode"],
+    "targetType": "library",
+}
