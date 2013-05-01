@@ -259,7 +259,7 @@ struct _wireVARIANT {
 		CY cyVal;
 		DATE date;
 		wireBSTR bstrVal;
-		IUnknown* punkVal;
+		LPUNKNOWN punkVal;
 		LPDISPATCH pdispVal;
 		wirePSAFEARRAY parray;
 		wireBRECORD brecVal;
@@ -273,7 +273,7 @@ struct _wireVARIANT {
 		CY* pcyVal;
 		DATE* pdate;
 		wireBSTR* pbstrVal;
-		IUnknown** ppunkVal;
+		LPUNKNOWN* ppunkVal;
 		LPDISPATCH* ppdispVal;
 		wirePSAFEARRAY* pparray;
 		wireVARIANT* pvarVal;

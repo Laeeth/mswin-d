@@ -11,7 +11,7 @@ module mswin.automation;
 public import mswin.com;
 import mswin.registry;
 
-import win32.oaidl, win32.wtypes, win32.ocidl;
+import win32.oaidl, win32.wtypes, win32.ocidl, win32.oleauto;
 
 import core.vararg;
 import core.stdc.string : memcpy;
@@ -402,16 +402,16 @@ struct ComVariant {
             || (vt == VARENUM.VT_UNKNOWN && punkVal is null);
     }
 
-    int opCmp(ComVariant that) {
-        return VarCmp(&_v, &that._v, GetThreadLocale(), 0) - 1;
+    int opCmp(ref const ComVariant that) const {
+        return VarCmp(cast(LPVARIANT)&_v, cast(LPVARIANT)&that._v, GetThreadLocale(), 0) - 1;
     }
 
-    bool opEquals(ComVariant that) {
+    bool opEquals()(auto ref const ComVariant that) inout {
         return opCmp(that) == 0;
     }
 
     /// As we have alias this and opDispatch, we need to forward the VARIANT members
-    auto opDispatch(string name)() if(is(typeof(mixin("_v." ~ name))))
+    @property auto opDispatch(string name)() if(is(typeof(mixin("_v." ~ name))))
     {
         mixin("return _v." ~ name ~ ";" );
     }

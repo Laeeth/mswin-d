@@ -11,7 +11,7 @@ public import mswin.com;
 public import mswin.automation;
 import mswin.registry, mswin.fileversion;
 
-import std.string;
+import std.string, std.conv;
 import std.c.string : memset;
 //debug import std.stdio : writefln;
 
@@ -124,10 +124,10 @@ class TypeLibrary {
         typeLib_ = typeLib;
         location_ = fileName;
 
-        wchar* bstrName, bstrHelp;
-        if (SUCCEEDED(typeLib_.GetDocumentation(-1, &bstrName, &bstrHelp, null, null))) {
-            name_ = fromBstr(bstrName);
-            help_ = fromBstr(bstrHelp);
+        ComStr bstrName, bstrHelp;
+        if (SUCCEEDED(typeLib_.GetDocumentation(-1, bstrName.pptr, bstrHelp.pptr, null, null))) {
+            name_ = to!string(bstrName);
+            help_ = to!string(bstrHelp);
         }
 
         TLIBATTR* attr;
@@ -248,10 +248,10 @@ class TypeLibrary {
                         if (!(libAttr.guid in map)) {
                             string name, help, location;
 
-                            wchar* bstrName, bstrHelp;
-                            if (typeLib.GetDocumentation(-1, &bstrName, &bstrHelp, null, null) == S_OK) {
-                                name = fromBstr(bstrName);
-                                help = fromBstr(bstrHelp);
+                            ComStr bstrName, bstrHelp;
+                            if (typeLib.GetDocumentation(-1, bstrName.pptr, bstrHelp.pptr, null, null) == S_OK) {
+                                name = to!string(bstrName);
+                                help = to!string(bstrHelp);
                             }
                             Version ver = Version(libAttr.wMajorVerNum, libAttr.wMinorVerNum);
 
@@ -482,12 +482,12 @@ class Module {
                 checkResult(typeInfo_.GetVarDesc(i, varDesc));
                 scope(exit) typeInfo_.ReleaseVarDesc(varDesc);
 
-                wchar* bstrName;
+                ComStr bstrName;
                 uint nameCount;
-                checkResult(typeInfo_.GetNames(varDesc.memid, &bstrName, 1, nameCount));
+                checkResult(typeInfo_.GetNames(varDesc.memid, bstrName.pptr, 1, nameCount));
 
                 Type fieldType = new TypeImpl(TypeImpl.getTypeName(&varDesc.elemdescVar.tdesc, typeInfo_), typeLib_);
-                members_ ~= new FieldImpl(fieldType, fromBstr(bstrName), *varDesc.lpvarValue, cast(FieldAttributes)varDesc.varkind);
+                members_ ~= new FieldImpl(fieldType, to!string(bstrName), *varDesc.lpvarValue, cast(FieldAttributes)varDesc.varkind);
             }
 
             FUNCDESC* funcDesc;
@@ -497,11 +497,11 @@ class Module {
 
                 int id = funcDesc.memid;
 
-                wchar* bstrName, bstrHelp;
-                checkResult(typeInfo_.GetDocumentation(id, &bstrName, &bstrHelp, null, null));
+                ComStr bstrName, bstrHelp;
+                checkResult(typeInfo_.GetDocumentation(id, bstrName.pptr, bstrHelp.pptr, null, null));
 
                 Type returnType = new TypeImpl(TypeImpl.getTypeName(&funcDesc.elemdescFunc.tdesc, typeInfo_), typeLib_);
-                members_ ~= new MethodImpl(typeInfo_, fromBstr(bstrName), fromBstr(bstrHelp), id, MethodAttributes.Default, returnType, typeLib_);
+                members_ ~= new MethodImpl(typeInfo_, to!string(bstrName), to!string(bstrHelp), id, MethodAttributes.Default, returnType, typeLib_);
             }
         }
         return members_;
@@ -880,12 +880,12 @@ package final class TypeImpl : Type {
                 checkResult(typeInfo_.GetVarDesc(i, varDesc));
                 scope(exit) typeInfo_.ReleaseVarDesc(varDesc);
 
-                wchar* bstrName;
+                ComStr bstrName;
                 uint nameCount;
-                checkResult(typeInfo_.GetNames(varDesc.memid, &bstrName, 1, nameCount));
+                checkResult(typeInfo_.GetNames(varDesc.memid, bstrName.pptr, 1, nameCount));
 
                 Type fieldType = new TypeImpl(TypeImpl.getTypeName(&varDesc.elemdescVar.tdesc, typeInfo_), typeLib_);
-                string fieldName = fromBstr(bstrName);
+                string fieldName = to!string(bstrName);
                 if (varDesc.varkind == VARKIND.VAR_CONST)
                     members_ ~= new FieldImpl(fieldType, fieldName, *varDesc.lpvarValue, cast(FieldAttributes)varDesc.varkind);
                 else
@@ -911,11 +911,11 @@ package final class TypeImpl : Type {
                         if (funcDesc.invkind & INVOKEKIND.INVOKE_PROPERTYPUTREF)
                             attrs = MethodAttributes.PutRefProperty;
 
-                        wchar* bstrName, bstrHelp;
-                        checkResult(typeInfo_.GetDocumentation(id, &bstrName, &bstrHelp, null, null));
+                        ComStr bstrName, bstrHelp;
+                        checkResult(typeInfo_.GetDocumentation(id, bstrName.pptr, bstrHelp.pptr, null, null));
 
                         Type returnType = new TypeImpl(TypeImpl.getTypeName(&funcDesc.elemdescFunc.tdesc, typeInfo_), typeLib_);
-                        members_ ~= new MethodImpl(typeInfo_, fromBstr(bstrName), fromBstr(bstrHelp), id, attrs, returnType, typeLib_);
+                        members_ ~= new MethodImpl(typeInfo_, to!string(bstrName), to!string(bstrHelp), id, attrs, returnType, typeLib_);
                     }
             }
         }
@@ -946,10 +946,10 @@ package final class TypeImpl : Type {
         typeInfo_ = typeInfo;
         typeInfo_.AddRef();
 
-        wchar* bstrName, bstrHelp;
-        if (SUCCEEDED(typeInfo_.GetDocumentation(-1, &bstrName, &bstrHelp, null, null))) {
-            name_ = fromBstr(bstrName);
-            help_ = fromBstr(bstrHelp);
+        ComStr bstrName, bstrHelp;
+        if (SUCCEEDED(typeInfo_.GetDocumentation(-1, bstrName.pptr, bstrHelp.pptr, null, null))) {
+            name_ = to!string(bstrName);
+            help_ = to!string(bstrHelp);
         }
 
         TYPEATTR* attr;
@@ -1013,7 +1013,7 @@ package final class TypeImpl : Type {
                 case VT_I4, VT_INT:
                     return "int";
                 case VT_HRESULT:
-                    return "int"; // HRESULT
+                    return "HRESULT";
                 case VT_UI8:
                     return "ulong";
                 case VT_I8:
@@ -1025,9 +1025,9 @@ package final class TypeImpl : Type {
                 case VT_CY:
                     return "long";
                 case VT_LPSTR:
-                    return "wchar*";
+                    return "char*";
                 case VT_BSTR:
-                    return "wchar*"; // BSTR
+                    return "BSTR"; // BSTR
                 case VT_LPWSTR:
                     return "wchar*";
                 case VT_UNKNOWN:
@@ -1055,9 +1055,9 @@ package final class TypeImpl : Type {
             if (SUCCEEDED(typeInfo.GetRefTypeInfo(desc.hreftype, customTypeInfo))) {
                 scope(exit) customTypeInfo.Release();
 
-                wchar* bstrName;
-                customTypeInfo.GetDocumentation(-1, &bstrName, null, null, null);
-                typeName = fromBstr(bstrName);
+                ComStr bstrName;
+                customTypeInfo.GetDocumentation(-1, bstrName.pptr, null, null, null);
+                typeName = to!string(bstrName);
             }
             return typeName;
         }

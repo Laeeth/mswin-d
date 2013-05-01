@@ -23,7 +23,7 @@ string DX_DECLARE_IID_RAW(string InterfaceName, string uuid)
     //static assert(uuid[8] == '-');
     //static assert(uuid[13] == '-');
     //static assert(uuid[18] == '-');
-    string result = `IID `~InterfaceName~
+    string result = `const IID `~InterfaceName~
         ` = {0x`~uuid[0..8]~
         `,0x`~uuid[9..13]~
         `,0x`~uuid[14..18]~
